@@ -10,7 +10,7 @@ export async function generatePDF(elementId: string, filename: string) {
 
   try {
     console.log('Starting PDF generation...');
-    
+
     // Ensure all images are loaded before capturing
     const images = element.getElementsByTagName('img');
     const imagePromises = Array.from(images).map(img => {
@@ -22,38 +22,46 @@ export async function generatePDF(elementId: string, filename: string) {
     });
     await Promise.all(imagePromises);
 
+    // Ensure fonts are loaded
+    if ('fonts' in document) {
+      await (document as any).fonts.ready;
+    }
+
     // The standard A4 width is 210mm. At 96 DPI, this is ~794px.
     // We'll use a fixed windowWidth in html2canvas to ensure the media queries and layout 
     // are consistent with the preview.
 
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 3, // Increased scale for better resolution
       useCORS: true,
       allowTaint: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 794, // Standard A4 width in pixels at 96 DPI
+      windowWidth: 800, // Slightly wider than A4 to allow for minor overflow
       onclone: (clonedDoc) => {
         const clonedElement = clonedDoc.getElementById(elementId);
         if (clonedElement) {
           clonedElement.style.width = '794px';
           clonedElement.style.padding = '20px';
-          clonedElement.style.margin = '0';
+          clonedElement.style.margin = '0 auto';
           clonedElement.style.boxShadow = 'none';
           clonedElement.style.border = 'none';
         }
       }
     });
 
+    // Add a small delay for image/font settling
+    await new Promise(resolve => setTimeout(resolve, 200));
+
     const imgData = canvas.toDataURL('image/jpeg', 1.0);
     const pdf = new jsPDF('p', 'mm', 'a4');
-    
+
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    
+
     const imgWidth = pdfWidth;
     const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-    
+
     let heightLeft = imgHeight;
     let position = 0;
 
