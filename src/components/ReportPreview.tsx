@@ -1,7 +1,6 @@
 import React from 'react';
 import logo from '../assets/logo.png';
 import { ReportData } from '../types';
-import { Check, X } from 'lucide-react';
 
 interface ReportPreviewProps {
   data: ReportData;
@@ -31,74 +30,93 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
         backgroundColor: '#ffffff',
         margin: '0 auto',
         boxSizing: 'border-box',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
-      <div style={{ padding: '40px', boxSizing: 'border-box', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{
+        padding: '40px',
+        boxSizing: 'border-box',
+        fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        width: '100%'
+      }}>
         {/* Header Section */}
-        <table style={{ width: '100%', marginBottom: '40px', borderBottom: '3px solid #0f172a', paddingBottom: '25px', borderCollapse: 'collapse' }}>
-          <tbody>
-            <tr>
-              <td style={{ verticalAlign: 'middle' }}>
-                <table style={{ borderCollapse: 'collapse' }}>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <img src={logo} alt="Logo" style={{ height: '55px', width: 'auto', display: 'block' }} />
-                      </td>
-                      <td style={{ padding: '0 25px' }}>
-                        <div style={{ width: '2px', height: '45px', backgroundColor: '#e2e8f0' }}></div>
-                      </td>
-                      <td>
-                        <div style={{
-                          fontSize: '28px',
-                          fontWeight: '900',
-                          textTransform: 'uppercase',
-                          lineHeight: '1.2',
-                          color: '#0f172a',
-                          letterSpacing: '-0.01em'
-                        }}>
-                          QUALITY INSPECTION
-                        </div>
-                        <div style={{
-                          fontSize: '28px',
-                          fontWeight: '900',
-                          textTransform: 'uppercase',
-                          lineHeight: '1.2',
-                          color: '#0f172a',
-                          letterSpacing: '-0.01em'
-                        }}>
-                          TEST REPORT
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </td>
-              <td style={{ textAlign: 'right', verticalAlign: 'top', width: '220px' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ textAlign: 'right', paddingBottom: '12px' }}>
-                        <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Report No.</div>
-                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#0f172a', fontFamily: 'monospace', lineHeight: '1.1' }}>{data.reportNumber || '---'}</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Date</div>
-                        <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', lineHeight: '1.1' }}>{data.testDate || '---'}</div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div style={{ marginBottom: '40px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <tbody>
+              <tr>
+                <td style={{ verticalAlign: 'middle' }}>
+                  <table style={{ borderCollapse: 'collapse' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ verticalAlign: 'middle' }}>
+                          <img src={logo} alt="Logo" style={{ height: '55px', width: 'auto', display: 'block' }} />
+                        </td>
+                        <td style={{ padding: '0 25px', verticalAlign: 'middle' }}>
+                          <div style={{ width: '2px', height: '45px', backgroundColor: '#e2e8f0' }}></div>
+                        </td>
+                        <td style={{ horizentalAlign: 'middle' }}>
+                          <div style={{
+                            fontSize: '25px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            lineHeight: '1.3',
+                            color: '#0f172a',
+                            letterSpacing: '-0.01em',
+                            marginBottom: '4px'
+                          }}>
+                            QUALITY INSPECTION
+                          </div>
+                          <div style={{
+                            fontSize: '25px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            lineHeight: '1.3',
+                            color: '#0f172a',
+                            letterSpacing: '-0.01em'
+                          }}>
+                            REPORT
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+                <td style={{ textAlign: 'right', verticalAlign: 'top', width: '220px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ textAlign: 'right', paddingBottom: '12px' }}>
+                          <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Report No.</div>
+                          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#0f172a', fontFamily: 'monospace', lineHeight: '1.1' }}>{data.reportNumber || '---'}</div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Date</div>
+                          <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', lineHeight: '1.1' }}>{data.testDate || '---'}</div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+              {/* Thick Separator Line */}
+              <tr>
+                <td colSpan={2} style={{ padding: '35px 0 0 0' }}>
+                  <div style={{ height: '3px', backgroundColor: '#0f172a', width: '100%' }}></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         {/* General Information */}
-        <section style={{ marginBottom: '40px' }}>
+        <section style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
           <h2 style={{
             backgroundColor: '#0f172a',
             color: '#ffffff',
@@ -109,7 +127,6 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
             marginBottom: '20px',
             letterSpacing: '0.05em'
           }}>General Information</h2>
-
           <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
             <tbody>
               {[
@@ -133,80 +150,52 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
           </table>
         </section>
 
-        {/* Main Inspections Section */}
-        <table style={{ width: '100%', marginBottom: '40px', borderCollapse: 'collapse' }}>
-          <tbody>
-            <tr>
-              <td style={{ verticalAlign: 'top', paddingRight: '20px', width: '50%' }}>
-                <h2 style={{
-                  backgroundColor: '#0f172a',
-                  color: '#ffffff',
-                  padding: '8px 15px',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  textTransform: 'uppercase',
-                  marginBottom: '15px'
-                }}>Packaging Inspection</h2>
-                <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
-                  <tbody>
-                    {[
-                      { l: 'Visual Inspection', v: data.packagingVisual },
-                      { l: 'Completeness', v: data.completeness },
-                      { l: 'Assembly Instructions', v: data.assemblyInstructions },
-                      { l: 'Packaging Specifications', v: data.packagingSpecifications }
-                    ].map((row, i) => (
-                      <tr key={i}>
-                        <td style={{ padding: '10px 0', color: '#475569', borderBottom: '1px solid #f8fafc' }}>{row.l}</td>
-                        <td style={{ textAlign: 'right', padding: '10px 0', borderBottom: '1px solid #f8fafc' }}><StatusIcon status={row.v} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </td>
-              <td style={{ verticalAlign: 'top', paddingLeft: '20px', width: '50%' }}>
-                <h2 style={{
-                  backgroundColor: '#0f172a',
-                  color: '#ffffff',
-                  padding: '8px 15px',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  textTransform: 'uppercase',
-                  marginBottom: '15px'
-                }}>Article Test Results</h2>
-                <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
-                  <thead>
-                    <tr style={{ backgroundColor: '#f8fafc' }}>
-                      <th style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'left', width: '30px' }}>#</th>
-                      <th style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}>Weight</th>
-                      <th style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}>Function</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.articles.map((art) => (
-                      <tr key={art.articleNumber}>
-                        <td style={{ border: '1px solid #e2e8f0', padding: '8px', fontWeight: 'bold' }}>{art.articleNumber}</td>
-                        <td style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}><StatusIcon status={art.weightTest} /></td>
-                        <td style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}><StatusIcon status={art.functionalTest} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* Inspections Row */}
+        <div style={{ display: 'flex', gap: '40px', marginBottom: '40px', pageBreakInside: 'avoid' }}>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '8px 15px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '15px' }}>Packaging Inspection</h2>
+            <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+              <tbody>
+                {[
+                  { l: 'Visual Inspection', v: data.packagingVisual },
+                  { l: 'Completeness', v: data.completeness },
+                  { l: 'Assembly Instructions', v: data.assemblyInstructions },
+                  { l: 'Packaging Specifications', v: data.packagingSpecifications }
+                ].map((row, i) => (
+                  <tr key={i}>
+                    <td style={{ padding: '10px 0', color: '#475569', borderBottom: '1px solid #f8fafc' }}>{row.l}</td>
+                    <td style={{ textAlign: 'right', padding: '10px 0', borderBottom: '1px solid #f8fafc' }}><StatusIcon status={row.v} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '8px 15px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '15px' }}>Article Test Results</h2>
+            <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc' }}>
+                  <th style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'left', width: '30px' }}>#</th>
+                  <th style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}>Weight</th>
+                  <th style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}>Function</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.articles.map((art) => (
+                  <tr key={art.articleNumber}>
+                    <td style={{ border: '1px solid #e2e8f0', padding: '8px', fontWeight: 'bold' }}>{art.articleNumber}</td>
+                    <td style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}><StatusIcon status={art.weightTest} /></td>
+                    <td style={{ border: '1px solid #e2e8f0', padding: '8px', textAlign: 'center' }}><StatusIcon status={art.functionalTest} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         {/* AQL Section */}
-        <section style={{ marginBottom: '40px' }}>
-          <h2 style={{
-            backgroundColor: '#0f172a',
-            color: '#ffffff',
-            padding: '8px 15px',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            textTransform: 'uppercase',
-            marginBottom: '15px'
-          }}>AQL Inspection Table</h2>
+        <section style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+          <h2 style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '8px 15px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '15px' }}>AQL Inspection Table</h2>
           <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
             <thead>
               <tr style={{ backgroundColor: '#f8fafc' }}>
@@ -242,77 +231,48 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
           </table>
         </section>
 
-        {/* Inspection Details Section */}
-        <section style={{ marginBottom: '40px' }}>
-          <h2 style={{
-            backgroundColor: '#0f172a',
-            color: '#ffffff',
-            padding: '8px 15px',
-            fontSize: '13px',
-            fontWeight: 'bold',
-            textTransform: 'uppercase',
-            marginBottom: '15px'
-          }}>Inspection Details</h2>
-          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0' }}>
-            <tbody>
-              <tr>
-                <td style={{ verticalAlign: 'top', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '15px', backgroundColor: '#fcfcfc', width: '50%' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Error Description</div>
-                  <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.5' }}>{data.errorDescription || 'No errors reported during this inspection.'}</div>
-                </td>
-                <td style={{ verticalAlign: 'top', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '15px', backgroundColor: '#fcfcfc', width: '50%' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Missing Parts</div>
-                  <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.5' }}>{data.missingPartsDescription || 'All parts accounted for.'}</div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        {/* Details Section */}
+        <section style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+          <h2 style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '8px 15px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '15px' }}>Inspection Details</h2>
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <div style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: '8px', padding: '15px', backgroundColor: '#fcfcfc' }}>
+              <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Error Description</div>
+              <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.5' }}>{data.errorDescription || 'No errors reported.'}</div>
+            </div>
+            <div style={{ flex: 1, border: '1px solid #e2e8f0', borderRadius: '8px', padding: '15px', backgroundColor: '#fcfcfc' }}>
+              <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Missing Parts</div>
+              <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.5' }}>{data.missingPartsDescription || 'None.'}</div>
+            </div>
+          </div>
         </section>
 
         {/* Evidence Section */}
         {data.images.length > 0 && (
-          <section style={{ marginBottom: '40px', pageBreakBefore: 'always' }}>
-            <h2 style={{
-              backgroundColor: '#0f172a',
-              color: '#ffffff',
-              padding: '8px 15px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              marginBottom: '20px'
-            }}>Inspection Photographs</h2>
-            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '15px' }}>
-              <tbody>
-                {Array.from({ length: Math.ceil(data.images.length / 2) }).map((_, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {data.images.slice(rowIndex * 2, rowIndex * 2 + 2).map((img) => (
-                      <td key={img.id} style={{ width: '50%', border: '1px solid #f1f5f9', padding: '12px', borderRadius: '12px', textAlign: 'center', backgroundColor: '#fcfcfc' }}>
-                        <img src={img.url} alt="Evidence" style={{ width: '100%', height: '240px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px', display: 'block' }} />
-                        {img.caption && <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>{img.caption}</div>}
-                      </td>
-                    ))}
-                    {data.images.slice(rowIndex * 2, rowIndex * 2 + 2).length === 1 && <td style={{ width: '50%' }}></td>}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <section style={{ marginBottom: '40px' }}>
+            <h2 style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '8px 15px', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '20px' }}>Inspection Photographs</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+              {data.images.map((img) => (
+                <div key={img.id} style={{ border: '1px solid #f1f5f9', padding: '12px', borderRadius: '12px', textAlign: 'center', backgroundColor: '#fcfcfc', pageBreakInside: 'avoid' }}>
+                  <img src={img.url} alt="Evidence" style={{ width: '100%', height: '240px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px', display: 'block' }} />
+                  {img.caption && <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>{img.caption}</div>}
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
+        {/* Footer Spacer */}
+        <div style={{ flex: 1 }}></div>
+
         {/* Signature Section */}
-        <section style={{ borderTop: '4px solid #0f172a', paddingTop: '40px', marginTop: '60px' }}>
+        <section style={{ borderTop: '4px solid #0f172a', paddingTop: '30px', marginTop: '40px', pageBreakInside: 'avoid' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
                 <td style={{ verticalAlign: 'top' }}>
-                  <div style={{ marginBottom: '30px' }}>
+                  <div style={{ marginBottom: '25px' }}>
                     <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Final Inspection Decision</div>
-                    <div style={{
-                      fontSize: '42px',
-                      fontWeight: '950',
-                      color: data.finalPassed === 'Yes' ? '#059669' : '#dc2626',
-                      lineHeight: '1'
-                    }}>
+                    <div style={{ fontSize: '42px', fontWeight: '950', color: data.finalPassed === 'Yes' ? '#059669' : '#dc2626', lineHeight: '1' }}>
                       {data.finalPassed === 'Yes' ? 'APPROVED' : 'REJECTED'}
                     </div>
                   </div>

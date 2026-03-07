@@ -27,31 +27,24 @@ export async function generatePDF(elementId: string, filename: string) {
       await (document as any).fonts.ready;
     }
 
-    // The standard A4 width is 210mm. At 96 DPI, this is ~794px.
-    // We'll use a fixed windowWidth in html2canvas to ensure the media queries and layout 
-    // are consistent with the preview.
-
     console.log('Capturing canvas with html2canvas...');
     const canvas = await html2canvas(element, {
       scale: 3,
       useCORS: true,
       allowTaint: false,
-      logging: true,
+      logging: false,
       backgroundColor: '#ffffff',
       windowWidth: 794,
       onclone: (clonedDoc) => {
-        // STYLE SANITIZATION: Remove all global styles that might contain oklch()
-        // which html2canvas cannot parse.
         const styles = clonedDoc.getElementsByTagName('style');
         const links = clonedDoc.getElementsByTagName('link');
         Array.from(styles).forEach(s => s.remove());
         Array.from(links).forEach(l => l.remove());
 
-        // Inject a minimal, safe stylesheet for the report
         const style = clonedDoc.createElement('style');
         style.innerHTML = `
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
-          body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+          body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; }
           #report-content * { box-sizing: border-box; }
         `;
         clonedDoc.head.appendChild(style);
@@ -59,19 +52,28 @@ export async function generatePDF(elementId: string, filename: string) {
         const clonedElement = clonedDoc.getElementById(elementId);
         if (clonedElement) {
           clonedElement.style.width = '794px';
+          clonedElement.style.display = 'flex';
+          clonedElement.style.flexDirection = 'column';
           clonedElement.style.background = '#ffffff';
-          clonedDoc.body.style.margin = '0';
-          clonedDoc.body.style.padding = '0';
+
+          // A4 at 96 DPI is ~1123px high.
+          const a4Height = 1123;
+          const naturalHeight = clonedElement.scrollHeight;
+          const totalPages = Math.ceil(naturalHeight / a4Height);
+          const forcedHeight = totalPages * a4Height;
+
+          clonedElement.style.height = `${forcedHeight}px`;
+          clonedElement.style.minHeight = `${forcedHeight}px`;
+          clonedDoc.body.style.height = `${forcedHeight}px`;
+          clonedDoc.body.style.overflow = 'hidden';
         }
       }
     });
 
     console.log('Canvas captured. Processing image data...');
-    // Add a small delay for image/font settling
     await new Promise(resolve => setTimeout(resolve, 300));
 
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    console.log('Image data generated. Creating PDF...');
     const pdf = new jsPDF('p', 'mm', 'a4');
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -83,12 +85,16 @@ export async function generatePDF(elementId: string, filename: string) {
     let heightLeft = imgHeight;
     let position = 0;
 
-    // First page
+    // Add first page
     pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+
+    // Convert current height position to mm (1px = 0.264583mm at 96dpi)
+    // But jspdf handles the scale internally usually if we provide widths.
+    // We just need to subtract full page heights.
     heightLeft -= pdfHeight;
 
-    // Subsequent pages
-    while (heightLeft > 0) {
+    // Add subsequent pages
+    while (heightLeft > 0.5) { // 0.5mm threshold to avoid empty sliver pages
       position = heightLeft - imgHeight;
       pdf.addPage();
       pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
@@ -100,10 +106,6 @@ export async function generatePDF(elementId: string, filename: string) {
     console.log('PDF saved successfully');
   } catch (error: any) {
     console.error('CRITICAL: PDF Generation Error:', error);
-    if (error.name === 'SecurityError') {
-      alert('Security Error: Failed to capture images. This usually happens with restricted browser settings or external images.');
-    } else {
-      alert(`Failed to generate PDF: ${error.message || 'Unknown error'}. Check console for details.`);
-    }
+    alert(`Failed to generate PDF: ${error.message || 'Unknown error'}. Check console for details.`);
   }
 }

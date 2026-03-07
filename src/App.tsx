@@ -331,7 +331,7 @@ export default function App() {
                           value={formData.reportNumber}
                           onChange={(e) => setFormData({ ...formData, reportNumber: e.target.value })}
                           className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
-                          placeholder="QC-2024-001"
+                          placeholder="QC-2026-001"
                         />
                       </div>
                       <div className="space-y-2">
@@ -722,12 +722,6 @@ export default function App() {
                   <p className="text-slate-500 font-medium">Review the generated document before export</p>
                 </div>
                 <div className="flex gap-3">
-                  <button
-                    onClick={() => setView(editingId || formData.reportNumber ? 'form' : 'dashboard')}
-                    className="px-6 py-2 rounded-xl font-bold text-slate-600 hover:bg-slate-200 transition-colors"
-                  >
-                    Back to Edit
-                  </button>
                   <button
                     disabled={isGenerating}
                     onClick={async () => {
