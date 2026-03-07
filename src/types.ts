@@ -5,7 +5,7 @@ export interface InspectionImage {
 }
 
 export interface ArticleInspection {
-  articleNumber: number;
+  articleNumber: string;
   weightTest: 'OK' | 'NOK';
   functionalTest: 'OK' | 'NOK';
   notes: string;

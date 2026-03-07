@@ -39,7 +39,7 @@ const INITIAL_DATA: ReportData = {
   assemblyInstructions: 'Yes',
   packagingSpecifications: 'Yes',
   articles: Array.from({ length: 5 }, (_, i) => ({
-    articleNumber: i + 1,
+    articleNumber: (i + 1).toString(),
     weightTest: 'OK',
     functionalTest: 'OK',
     notes: '',
@@ -444,20 +444,50 @@ export default function App() {
 
                   {activeTab === 2 && (
                     <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-black uppercase text-sm tracking-widest text-slate-900">Article Inspection List</h3>
+                        <button
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              articles: [
+                                ...formData.articles,
+                                { articleNumber: (formData.articles.length + 1).toString(), weightTest: 'OK', functionalTest: 'OK', notes: '' }
+                              ]
+                            });
+                          }}
+                          className="px-4 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors flex items-center gap-2"
+                        >
+                          <Plus size={14} />
+                          Add Article
+                        </button>
+                      </div>
                       <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
                           <thead>
                             <tr className="bg-slate-50">
-                              <th className="border p-3 text-left text-xs font-black uppercase text-slate-500">Art. #</th>
+                              <th className="border p-3 text-left text-xs font-black uppercase text-slate-500">Art. Code</th>
                               <th className="border p-3 text-left text-xs font-black uppercase text-slate-500">Weight Test</th>
                               <th className="border p-3 text-left text-xs font-black uppercase text-slate-500">Functional Test</th>
                               <th className="border p-3 text-left text-xs font-black uppercase text-slate-500">Notes</th>
+                              <th className="border p-3 text-center text-xs font-black uppercase text-slate-500 w-16">Action</th>
                             </tr>
                           </thead>
                           <tbody>
                             {formData.articles.map((art, idx) => (
                               <tr key={idx}>
-                                <td className="border p-3 font-bold">{art.articleNumber}</td>
+                                <td className="border p-3">
+                                  <input
+                                    type="text"
+                                    value={art.articleNumber}
+                                    onChange={(e) => {
+                                      const newArts = [...formData.articles];
+                                      newArts[idx].articleNumber = e.target.value;
+                                      setFormData({ ...formData, articles: newArts });
+                                    }}
+                                    className="w-full p-1 rounded border border-slate-200 outline-none font-bold text-sm"
+                                  />
+                                </td>
                                 <td className="border p-3">
                                   <select
                                     value={art.weightTest}
@@ -466,7 +496,7 @@ export default function App() {
                                       newArts[idx].weightTest = e.target.value as 'OK' | 'NOK';
                                       setFormData({ ...formData, articles: newArts });
                                     }}
-                                    className="w-full p-1 rounded border border-slate-200 outline-none"
+                                    className="w-full p-1 rounded border border-slate-200 outline-none text-sm"
                                   >
                                     <option value="OK">OK</option>
                                     <option value="NOK">NOK</option>
@@ -480,7 +510,7 @@ export default function App() {
                                       newArts[idx].functionalTest = e.target.value as 'OK' | 'NOK';
                                       setFormData({ ...formData, articles: newArts });
                                     }}
-                                    className="w-full p-1 rounded border border-slate-200 outline-none"
+                                    className="w-full p-1 rounded border border-slate-200 outline-none text-sm"
                                   >
                                     <option value="OK">OK</option>
                                     <option value="NOK">NOK</option>
@@ -495,9 +525,21 @@ export default function App() {
                                       newArts[idx].notes = e.target.value;
                                       setFormData({ ...formData, articles: newArts });
                                     }}
-                                    className="w-full p-1 rounded border border-slate-200 outline-none"
+                                    className="w-full p-1 rounded border border-slate-200 outline-none text-sm"
                                     placeholder="Add notes..."
                                   />
+                                </td>
+                                <td className="border p-3 text-center">
+                                  <button
+                                    onClick={() => {
+                                      const newArts = formData.articles.filter((_, i) => i !== idx);
+                                      setFormData({ ...formData, articles: newArts });
+                                    }}
+                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Remove row"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
                                 </td>
                               </tr>
                             ))}
