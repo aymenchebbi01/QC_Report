@@ -37,15 +37,20 @@ export async function generatePDF(elementId: string, filename: string) {
       allowTaint: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 800, // Slightly wider than A4 to allow for minor overflow
+      windowWidth: 794, // Slightly wider than A4 to allow for minor overflow
       onclone: (clonedDoc) => {
         const clonedElement = clonedDoc.getElementById(elementId);
         if (clonedElement) {
           clonedElement.style.width = '794px';
-          clonedElement.style.padding = '20px';
-          clonedElement.style.margin = '0 auto';
+          clonedElement.style.margin = '0';
+          clonedElement.style.padding = '0';
           clonedElement.style.boxShadow = 'none';
           clonedElement.style.border = 'none';
+
+          // Ensure the body/html of the clone doesn't have scrollbars or margins
+          clonedDoc.body.style.margin = '0';
+          clonedDoc.body.style.padding = '0';
+          clonedDoc.body.style.overflow = 'hidden';
         }
       }
     });
