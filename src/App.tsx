@@ -12,13 +12,17 @@ import {
   LayoutDashboard,
   Settings,
   LogOut,
-  Eye
+  Eye,
+  AlertTriangle,
+  Wrench
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ReportData, SavedReport, ArticleInspection } from './types';
+import { ReportData, SavedReport, ArticleInspection, Reclamation, ReworkEntry } from './types';
 import { api } from './services/api';
 import { ImageUpload } from './components/ImageUpload';
 import { ReportPreview } from './components/ReportPreview';
+import { QualityReclamation } from './components/QualityReclamation';
+import { Rework } from './components/Rework';
 import { generatePDF } from './utils/pdfGenerator';
 import { cn } from './utils/cn';
 
@@ -38,7 +42,7 @@ const INITIAL_DATA: ReportData = {
   completeness: 'OK',
   assemblyInstructions: 'Yes',
   packagingSpecifications: 'Yes',
-  articles: Array.from({ length: 5 }, (_, i) => ({
+  articles: Array.from({ length: 1 }, (_, i) => ({
     articleNumber: (i + 1).toString(),
     weightTest: 'OK',
     functionalTest: 'OK',
@@ -65,13 +69,15 @@ const INITIAL_DATA: ReportData = {
 };
 
 export default function App() {
-  const [view, setView] = useState<'dashboard' | 'form' | 'preview'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'reports' | 'form' | 'preview' | 'reclamation' | 'rework'>('dashboard');
   const [reports, setReports] = useState<SavedReport[]>([]);
   const [formData, setFormData] = useState<ReportData>(INITIAL_DATA);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [reclamations, setReclamations] = useState<Reclamation[]>([]);
+  const [reworks, setReworks] = useState<ReworkEntry[]>([]);
 
   useEffect(() => {
     loadReports();
@@ -94,7 +100,7 @@ export default function App() {
         await api.createReport(formData.reportNumber || `REP-${Date.now()}`, formData);
       }
       loadReports();
-      setView('dashboard');
+      setView('reports');
       setFormData(INITIAL_DATA);
       setEditingId(null);
     } catch (error) {
@@ -149,18 +155,34 @@ export default function App() {
             <span className="font-semibold">Dashboard</span>
           </button>
           <button
-            onClick={() => {
-              setFormData(INITIAL_DATA);
-              setEditingId(null);
-              setView('form');
-            }}
+            onClick={() => setView('reports')}
             className={cn(
               "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
-              view === 'form' && !editingId ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "hover:bg-slate-800 text-slate-400"
+              view === 'reports' || view === 'form' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "hover:bg-slate-800 text-slate-400"
             )}
           >
-            <Plus size={20} />
-            <span className="font-semibold">New Report</span>
+            <FileText size={20} />
+            <span className="font-semibold">Reports</span>
+          </button>
+          <button
+            onClick={() => setView('reclamation')}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+              view === 'reclamation' ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "hover:bg-slate-800 text-slate-400"
+            )}
+          >
+            <AlertTriangle size={20} />
+            <span className="font-semibold">Réclamation</span>
+          </button>
+          <button
+            onClick={() => setView('rework')}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+              view === 'rework' ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "hover:bg-slate-800 text-slate-400"
+            )}
+          >
+            <Wrench size={20} />
+            <span className="font-semibold">Rework</span>
           </button>
         </nav>
 
@@ -169,106 +191,248 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 ml-64 p-8">
         <AnimatePresence mode="wait">
-          {view === 'dashboard' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
-            >
-              <header className="flex justify-between items-end">
-                <div>
-                  <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Inspection Dashboard</h1>
-                  <p className="text-slate-500 font-medium">Manage and track manufacturing quality reports</p>
-                </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Search reports..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none w-64 shadow-sm"
-                  />
-                </div>
-              </header>
+          {view === 'dashboard' && (() => {
+            const totalRec = reclamations.length;
+            const completedRec = reclamations.filter(r => r.reworkId).length;
+            const openRec = totalRec - completedRec;
+            const totalRework = reworks.length;
+            const approvedCount = reworks.filter(r => r.approved === 'Oui').length;
+            const notApprovedCount = reworks.filter(r => r.approved === 'Non').length;
+            const decisionCounts = reworks.reduce<Record<string, number>>((acc, r) => {
+              const d = r.decision || 'Non défini'; acc[d] = (acc[d] || 0) + 1; return acc;
+            }, {});
+            const DCOLORS: Record<string, string> = { Retouche: '#3b82f6', Rebut: '#ef4444', 'Accepté': '#10b981', 'Retour fournisseur': '#f59e0b', 'Non défini': '#cbd5e1' };
+            const DTEXTCLS: Record<string, string> = { Retouche: 'text-blue-600', Rebut: 'text-red-600', 'Accepté': 'text-emerald-600', 'Retour fournisseur': 'text-amber-600', 'Non défini': 'text-slate-400' };
+            const DBGCLS: Record<string, string> = { Retouche: 'bg-blue-500', Rebut: 'bg-red-500', 'Accepté': 'bg-emerald-500', 'Retour fournisseur': 'bg-amber-500', 'Non défini': 'bg-slate-300' };
+            // Donut chart segments
+            const donutR = 54; const donutC = 2 * Math.PI * donutR;
+            const decisionEntries = (Object.entries(decisionCounts) as [string, number][]);
+            let strokeOffset = donutC * 0.25; // start at top
+            const donutSegments = decisionEntries.map(([d, cnt]) => {
+              const frac = cnt / Math.max(totalRework, 1);
+              const dash = frac * donutC;
+              const seg = { d, cnt, dash, offset: strokeOffset, color: DCOLORS[d] ?? '#94a3b8' };
+              strokeOffset -= dash; return seg;
+            });
+            return (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
+                <header>
+                  <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Dashboard</h1>
+                  <p className="text-slate-500 font-medium">Overview — Reclamations &amp; Rework</p>
+                </header>
 
-              <div className="grid grid-cols-1 gap-4">
-                {filteredReports.length === 0 ? (
-                  <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-sm">
-                    <FileText className="mx-auto h-16 w-16 text-slate-200 mb-4" />
-                    <h3 className="text-xl font-bold text-slate-900">No reports found</h3>
-                    <p className="text-slate-500 mb-6">Start by creating your first quality inspection report.</p>
-                    <button
-                      onClick={() => setView('form')}
-                      className="bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-600 transition-colors inline-flex items-center gap-2"
-                    >
-                      <Plus size={20} />
-                      Create Report
+                {/* KPI cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Reclamations', value: totalRec, sub: 'Total recorded', color: 'border-orange-400', textColor: 'text-orange-500', onClick: () => setView('reclamation') },
+                    { label: 'Pending', value: openRec, sub: 'Without rework', color: 'border-amber-400', textColor: 'text-amber-500', onClick: () => setView('reclamation') },
+                    { label: 'Completed', value: completedRec, sub: 'With rework', color: 'border-emerald-400', textColor: 'text-emerald-500', onClick: () => setView('reclamation') },
+                    { label: 'Reworks', value: totalRework, sub: 'Total recorded', color: 'border-blue-400', textColor: 'text-blue-500', onClick: () => setView('rework') },
+                  ].map(card => (
+                    <button key={card.label} onClick={card.onClick}
+                      className={`bg-white rounded-2xl border-l-4 ${card.color} border border-slate-200 shadow-sm p-5 text-left hover:shadow-md transition-all`}>
+                      <div className={`text-4xl font-black ${card.textColor}`}>{card.value}</div>
+                      <div className="text-sm font-bold text-slate-900 mt-1">{card.label}</div>
+                      <div className="text-xs text-slate-400">{card.sub}</div>
                     </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Donut chart – decisions */}
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Decisions</h2>
+                    {totalRework === 0 ? (
+                      <div className="h-40 flex items-center justify-center text-slate-300 text-sm italic">No data</div>
+                    ) : (
+                      <div className="flex items-center gap-6">
+                        <svg width="130" height="130" viewBox="0 0 130 130">
+                          <circle cx="65" cy="65" r={donutR} fill="none" stroke="#f1f5f9" strokeWidth="16" />
+                          {donutSegments.map(seg => (
+                            <circle key={seg.d} cx="65" cy="65" r={donutR} fill="none"
+                              stroke={seg.color} strokeWidth="16"
+                              strokeDasharray={`${seg.dash} ${donutC - seg.dash}`}
+                              strokeDashoffset={seg.offset}
+                              style={{ transition: 'all 0.6s ease' }} />
+                          ))}
+                          <text x="65" y="60" textAnchor="middle" className="text-xs" fontSize="22" fontWeight="900" fill="#0f172a">{totalRework}</text>
+                          <text x="65" y="76" textAnchor="middle" fontSize="9" fontWeight="700" fill="#94a3b8" style={{ textTransform: 'uppercase', letterSpacing: 1 }}>reworks</text>
+                        </svg>
+                        <div className="space-y-2 flex-1">
+                          {decisionEntries.map(([d, cnt]) => (
+                            <div key={d} className="flex items-center gap-2">
+                              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: DCOLORS[d] ?? '#94a3b8' }} />
+                              <span className="text-xs font-bold text-slate-600 flex-1">{d}</span>
+                              <span className="text-xs font-black text-slate-400">{cnt}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : (
+
+                  {/* Bar chart – reclamation completion + approval rate */}
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Tracking</h2>
+                    <div className="space-y-5">
+                      {/* Reclamation completion */}
+                      <div>
+                        <div className="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                          <span>Completion rate</span>
+                          <span>{totalRec ? Math.round((completedRec / totalRec) * 100) : 0}%</span>
+                        </div>
+                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${totalRec ? (completedRec / totalRec) * 100 : 0}%` }} />
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-1">{completedRec} / {totalRec} reclamations with rework</div>
+                      </div>
+                      {/* Approved rate */}
+                      <div>
+                        <div className="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                          <span>Taux approuvé</span>
+                          <span>{totalRework ? Math.round((approvedCount / totalRework) * 100) : 0}%</span>
+                        </div>
+                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${totalRework ? (approvedCount / totalRework) * 100 : 0}%` }} />
+                        </div>
+                        <div className="flex gap-4 text-[10px] text-slate-400 mt-1">
+                          <span className="text-emerald-600 font-bold">✓ Yes: {approvedCount}</span>
+                          <span className="text-red-500 font-bold">✗ No: {notApprovedCount}</span>
+                          <span>Not set: {totalRework - approvedCount - notApprovedCount}</span>
+                        </div>
+                      </div>
+                      {/* Decision breakdown bars */}
+                      {decisionEntries.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">By decision</p>
+                          {decisionEntries.map(([d, cnt]) => (
+                            <div key={d} className="flex items-center gap-2">
+                              <span className={`w-32 text-[11px] font-bold shrink-0 ${DTEXTCLS[d] ?? 'text-slate-500'}`}>{d}</span>
+                              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div className={`h-full rounded-full ${DBGCLS[d] ?? 'bg-slate-400'}`} style={{ width: `${(cnt / totalRework) * 100}%` }} />
+                              </div>
+                              <span className="text-[11px] font-black text-slate-400 w-5 text-right">{cnt}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent reworks table */}
+                {reworks.length > 0 && (
                   <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                      <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Recent reworks</h2>
+                      <button onClick={() => setView('rework')} className="text-xs font-bold text-blue-500 hover:underline">View all →</button>
+                    </div>
                     <table className="w-full text-left">
                       <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                          <th className="px-6 py-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Report #</th>
-                          <th className="px-6 py-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Article</th>
-                          <th className="px-6 py-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Date</th>
-                          <th className="px-6 py-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Status</th>
-                          <th className="px-6 py-4 font-bold text-slate-500 uppercase text-xs tracking-wider text-right">Actions</th>
+                        <tr className="bg-slate-50 border-b border-slate-100">
+                          {['VR REF', 'Set No.', 'Description', 'Decision', 'Approved'].map(h => (
+                            <th key={h} className="px-4 py-3 text-[10px] font-black uppercase tracking-wider text-slate-400">{h}</th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {filteredReports.map((report) => (
-                          <tr key={report.id} className="hover:bg-slate-50 transition-colors group">
-                            <td className="px-6 py-4 font-mono font-bold text-emerald-600">{report.report_number}</td>
-                            <td className="px-6 py-4">
-                              <div className="font-bold text-slate-900">{report.data.articleDescription}</div>
-                              <div className="text-xs text-slate-500">{report.data.articleNumber}</div>
+                        {reworks.slice(0, 5).map(r => (
+                          <tr key={r.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-4 py-3 font-mono font-bold text-blue-600">{r.vrRef}</td>
+                            <td className="px-4 py-3">{r.setNumber}</td>
+                            <td className="px-4 py-3 truncate max-w-[160px]">{r.description}</td>
+                            <td className="px-4 py-3">
+                              {r.decision
+                                ? <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-black uppercase', DBGCLS[r.decision] ? DBGCLS[r.decision].replace('bg-', 'bg-').replace('500', '100') + ' ' + DTEXTCLS[r.decision] : 'bg-slate-100 text-slate-600')}>{r.decision}</span>
+                                : <span className="text-slate-300">—</span>}
                             </td>
-                            <td className="px-6 py-4 text-slate-600 font-medium">{report.data.testDate}</td>
-                            <td className="px-6 py-4">
-                              <span className={cn(
-                                "px-3 py-1 rounded-full text-xs font-black uppercase",
-                                report.data.finalPassed === 'Yes' ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                              )}>
-                                {report.data.finalPassed === 'Yes' ? 'Passed' : 'Failed'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                  onClick={() => {
-                                    setFormData(report.data);
-                                    setView('preview');
-                                  }}
-                                  className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"
-                                  title="Preview"
-                                >
-                                  <Eye size={18} />
-                                </button>
-                                <button
-                                  onClick={() => handleEdit(report)}
-                                  className="p-2 text-slate-400 hover:text-blue-500 transition-colors"
-                                  title="Edit"
-                                >
-                                  <Edit3 size={18} />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(report.id)}
-                                  className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                                  title="Delete"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
-                              </div>
+                            <td className="px-4 py-3">
+                              {r.approved === 'Oui'
+                                ? <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">Oui</span>
+                                : r.approved === 'Non'
+                                  ? <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700">Non</span>
+                                  : <span className="text-slate-300">—</span>}
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
+                )}
+              </motion.div>
+            );
+          })()}
+
+          {/* ── Reports list view ── */}
+          {view === 'reports' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+              <header className="flex justify-between items-start">
+                <div>
+                  <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Inspection Reports</h1>
+                  <p className="text-slate-500 font-medium">Manage and review quality reports</p>
+                </div>
+                <button onClick={() => { setFormData(INITIAL_DATA); setEditingId(null); setView('form'); }}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all">
+                  <Plus size={18} /> New Report
+                </button>
+              </header>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                <input type="text" placeholder="Search by number, article, date…" value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm" />
+              </div>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                {filteredReports.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <FileText className="mx-auto h-14 w-14 text-slate-200 mb-4" />
+                    <h3 className="text-lg font-bold text-slate-900">No reports found</h3>
+                    <p className="text-slate-500 mb-6 text-sm">{searchQuery ? 'Try a different search.' : 'Create your first report.'}</p>
+                    {!searchQuery && (
+                      <button onClick={() => { setFormData(INITIAL_DATA); setEditingId(null); setView('form'); }}
+                        className="bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-600 transition-colors inline-flex items-center gap-2">
+                        <Plus size={18} /> Create report
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="bg-slate-900 text-white">
+                        {['Report #', 'Article', 'Date', 'Status', 'Actions'].map(h => (
+                          <th key={h} className="px-6 py-3 text-[10px] font-black uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredReports.map(report => (
+                        <tr key={report.id} className="hover:bg-slate-50 transition-colors group">
+                          <td className="px-6 py-4 font-mono font-bold text-emerald-600">{report.report_number}</td>
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-slate-900">{report.data.articleDescription}</div>
+                            <div className="text-xs text-slate-500">{report.data.articleNumber}</div>
+                          </td>
+                          <td className="px-6 py-4 text-slate-600">{report.data.testDate}</td>
+                          <td className="px-6 py-4">
+                            <span className={cn('px-3 py-1 rounded-full text-xs font-black uppercase',
+                              report.data.finalPassed === 'Yes' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700')}>
+                              {report.data.finalPassed === 'Yes' ? 'Passed' : 'Failed'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => { setFormData(report.data); setView('preview'); }} title="Aperçu"
+                                className="p-2 text-slate-400 hover:text-emerald-500 transition-colors"><Eye size={17} /></button>
+                              <button onClick={() => handleEdit(report)} title="Modifier"
+                                className="p-2 text-slate-400 hover:text-blue-500 transition-colors"><Edit3 size={17} /></button>
+                              <button onClick={() => handleDelete(report.id)} title="Supprimer"
+                                className="p-2 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={17} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
               </div>
             </motion.div>
@@ -289,12 +453,6 @@ export default function App() {
                   <p className="text-slate-500 font-medium">Complete all sections to generate the final report</p>
                 </div>
                 <div className="flex gap-3">
-                  <button
-                    onClick={() => setView('dashboard')}
-                    className="px-6 py-2 rounded-xl font-bold text-slate-600 hover:bg-slate-200 transition-colors"
-                  >
-                    Cancel
-                  </button>
                   <button
                     onClick={handleSave}
                     className="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all"
@@ -335,7 +493,7 @@ export default function App() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-black uppercase text-slate-500">Article Number</label>
+                        <label className="text-xs font-black uppercase text-slate-500">Set Number</label>
                         <input
                           type="text"
                           value={formData.articleNumber}
@@ -344,7 +502,7 @@ export default function App() {
                         />
                       </div>
                       <div className="space-y-2 md:col-span-2">
-                        <label className="text-xs font-black uppercase text-slate-500">Article Description</label>
+                        <label className="text-xs font-black uppercase text-slate-500">Set Description</label>
                         <input
                           type="text"
                           value={formData.articleDescription}
@@ -353,16 +511,7 @@ export default function App() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-black uppercase text-slate-500">Order Number</label>
-                        <input
-                          type="text"
-                          value={formData.orderNumber}
-                          onChange={(e) => setFormData({ ...formData, orderNumber: e.target.value })}
-                          className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-black uppercase text-slate-500">Supplier</label>
+                        <label className="text-xs font-black uppercase text-slate-500">Source</label>
                         <input
                           type="text"
                           value={formData.supplier}
@@ -574,7 +723,7 @@ export default function App() {
                         <h3 className="font-black uppercase text-sm tracking-widest text-slate-900 border-b pb-2">AQL Inspection</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase text-slate-400">Batch Qty (N)</label>
+                            <label className="text-[10px] font-black uppercase text-slate-400">Total Qty (N)</label>
                             <input type="text" value={formData.batchQuantity} onChange={(e) => setFormData({ ...formData, batchQuantity: e.target.value })} className="w-full px-3 py-1.5 border rounded" />
                           </div>
                           <div className="space-y-1">
@@ -741,6 +890,32 @@ export default function App() {
               </header>
 
               <ReportPreview data={formData} />
+            </motion.div>
+          )}
+          {view === 'reclamation' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <QualityReclamation
+                reclamations={reclamations}
+                setReclamations={setReclamations}
+              />
+            </motion.div>
+          )}
+          {view === 'rework' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <Rework
+                reclamations={reclamations}
+                setReclamations={setReclamations}
+                reworks={reworks}
+                setReworks={setReworks}
+              />
             </motion.div>
           )}
         </AnimatePresence>

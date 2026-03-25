@@ -68,3 +68,46 @@ export interface SavedReport {
   created_at: string;
   updated_at: string;
 }
+
+// ─── Reclamation ────────────────────────────────────────────────
+export interface Reclamation {
+  id: number;
+  set: string;
+  reference: string;
+  description: string;
+  defaut: string;
+  quantite: string;
+  taux: string;
+  remarque: string;
+  setImage: string | null;
+  galleryImages: (string | null)[];
+  reworkId?: number; // linked rework id when completed
+}
+
+// ─── Rework ─────────────────────────────────────────────────────
+export interface ReworkEntry {
+  id: number;
+  reclamationId?: number; // optional link back to a Reclamation
+  vrRef: string;
+  date: string;
+  prPu: string;
+  mtGr: string;
+  setNumber: string;
+  partNo: string;
+  description: string;
+  quantity: string;
+  comments: string;
+  percent: string;
+  approved: string;
+  reworkForm: string;
+  decision: string;
+  quantityReturned: string;
+  weekTrailer: string;
+  trailerNumber: string;
+  deliveryNoteTN: string;
+  quota: string;
+  orderNumber2: string;
+  quantityReceived: string;
+  colonne1: string;
+  colonne2: string;
+}
