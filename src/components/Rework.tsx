@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Reclamation, ReworkEntry } from '../types';
 import * as XLSX from 'xlsx';
 import { cn } from '../utils/cn';
+import { api } from '../services/api';
 
 interface Props {
   reclamations: Reclamation[];
@@ -106,34 +107,58 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const saveEntry = () => {
+  const saveEntry = async () => {
     if (!formData.vrRef && !formData.setNumber) {
       alert('Please fill in at least VR REF or Set Number.');
       return;
     }
-    const newId = editingId ?? Date.now();
-    if (editingId !== null) {
-      setReworks(prev => prev.map(r => r.id === editingId ? { ...formData, id: editingId } : r));
-      setReclamations(prev => prev.map(r => {
-        if (r.reworkId === editingId && r.id !== formData.reclamationId) return { ...r, reworkId: undefined };
-        if (r.id === formData.reclamationId) return { ...r, reworkId: editingId };
-        return r;
-      }));
-    } else {
-      setReworks(prev => [{ ...formData, id: newId }, ...prev]);
-      if (formData.reclamationId) {
-        setReclamations(prev => prev.map(r => r.id === formData.reclamationId ? { ...r, reworkId: newId } : r));
+    try {
+      if (editingId !== null) {
+        const updated = await api.updateRework(editingId, formData);
+        setReworks(prev => prev.map(r => r.id === editingId ? updated : r));
+        
+        const oldEntry = reworks.find(r => r.id === editingId);
+        if (oldEntry?.reclamationId !== formData.reclamationId) {
+          if (oldEntry?.reclamationId) {
+            await api.updateReclamation(oldEntry.reclamationId, { reworkId: null } as any);
+            setReclamations(prev => prev.map(r => r.id === oldEntry.reclamationId ? { ...r, reworkId: undefined } : r));
+          }
+          if (formData.reclamationId) {
+            await api.updateReclamation(formData.reclamationId, { reworkId: editingId });
+            setReclamations(prev => prev.map(r => r.id === formData.reclamationId ? { ...r, reworkId: editingId } : r));
+          }
+        }
+      } else {
+        const created = await api.createRework(formData);
+        setReworks(prev => [created, ...prev]);
+        
+        if (formData.reclamationId) {
+          await api.updateReclamation(formData.reclamationId, { reworkId: created.id });
+          setReclamations(prev => prev.map(r => r.id === formData.reclamationId ? { ...r, reworkId: created.id } : r));
+        }
       }
+      resetToList();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to save rework to database');
     }
-    resetToList();
   };
 
-  const deleteEntry = (e: React.MouseEvent, id: number) => {
+  const deleteEntry = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    const entry = reworks.find(r => r.id === id);
-    setReworks(prev => prev.filter(r => r.id !== id));
-    if (entry?.reclamationId) {
-      setReclamations(prev => prev.map(r => r.id === entry.reclamationId ? { ...r, reworkId: undefined } : r));
+    if (confirm("Delete this rework?")) {
+      try {
+        const entry = reworks.find(r => r.id === id);
+        await api.deleteRework(id);
+        setReworks(prev => prev.filter(r => r.id !== id));
+        if (entry?.reclamationId) {
+          await api.updateReclamation(entry.reclamationId, { reworkId: null } as any);
+          setReclamations(prev => prev.map(r => r.id === entry.reclamationId ? { ...r, reworkId: undefined } : r));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete rework');
+      }
     }
   };
 

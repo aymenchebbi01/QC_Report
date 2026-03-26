@@ -8,6 +8,7 @@ import { Reclamation } from '../types';
 import { generatePDF } from '../utils/pdfGenerator';
 import logo from '../assets/logo.png';
 import { cn } from '../utils/cn';
+import { api } from '../services/api';
 
 interface Props {
   reclamations: Reclamation[];
@@ -85,25 +86,39 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
     reader.readAsDataURL(file);
   };
 
-  const saveEntry = () => {
+  const saveEntry = async () => {
     if (!formData.set || !formData.reference) {
       alert('Please fill in at least SET and Reference.');
       return;
     }
-    if (editingId !== null) {
-      setReclamations(prev => prev.map(r => r.id === editingId
-        ? { ...formData, id: editingId, setImage, galleryImages: [...galleryImages], reworkId: r.reworkId }
-        : r
-      ));
-    } else {
-      setReclamations(prev => [{ ...formData, id: Date.now(), setImage, galleryImages: [...galleryImages] }, ...prev]);
+    try {
+      if (editingId !== null) {
+        const payload = { ...formData, setImage, galleryImages: [...galleryImages] };
+        const updated = await api.updateReclamation(editingId, payload);
+        setReclamations(prev => prev.map(r => r.id === editingId ? { ...updated, reworkId: r.reworkId } : r));
+      } else {
+        const payload = { ...formData, setImage, galleryImages: [...galleryImages] };
+        const created = await api.createReclamation(payload as Omit<Reclamation, 'id'>);
+        setReclamations(prev => [created, ...prev]);
+      }
+      resetToList();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to save reclamation to database');
     }
-    resetToList();
   };
 
-  const deleteEntry = (e: React.MouseEvent, id: number) => {
+  const deleteEntry = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    setReclamations(prev => prev.filter(r => r.id !== id));
+    if (confirm("Delete this reclamation?")) {
+      try {
+        await api.deleteReclamation(id);
+        setReclamations(prev => prev.filter(r => r.id !== id));
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete reclamation');
+      }
+    }
   };
 
   const handleExportPDF = async (rec: Reclamation) => {

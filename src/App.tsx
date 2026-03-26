@@ -80,8 +80,23 @@ export default function App() {
   const [reworks, setReworks] = useState<ReworkEntry[]>([]);
 
   useEffect(() => {
-    loadReports();
+    loadAllData();
   }, []);
+
+  const loadAllData = async () => {
+    try {
+      const [reps, recs, rews] = await Promise.all([
+        api.getReports(),
+        api.getReclamations(),
+        api.getReworks()
+      ]);
+      setReports(reps);
+      setReclamations(recs);
+      setReworks(rews);
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    }
+  };
 
   const loadReports = async () => {
     try {
@@ -196,8 +211,8 @@ export default function App() {
             const completedRec = reclamations.filter(r => r.reworkId).length;
             const openRec = totalRec - completedRec;
             const totalRework = reworks.length;
-            const approvedCount = reworks.filter(r => r.approved === 'Oui').length;
-            const notApprovedCount = reworks.filter(r => r.approved === 'Non').length;
+            const approvedCount = reworks.filter(r => r.approved === 'Yes').length;
+            const notApprovedCount = reworks.filter(r => r.approved === 'No').length;
             const decisionCounts = reworks.reduce<Record<string, number>>((acc, r) => {
               const d = r.decision || 'Non défini'; acc[d] = (acc[d] || 0) + 1; return acc;
             }, {});
