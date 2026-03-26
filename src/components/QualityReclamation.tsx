@@ -128,7 +128,6 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
       <header className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Quality Reclamation</h1>
-          <p className="text-slate-500 font-medium">Record and track quality reclamations</p>
         </div>
         {innerView === 'list' && (
           <button onClick={openNewForm}
@@ -256,7 +255,7 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
                 {activeTab === 1 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase text-slate-500">Defect</label>
+                      <label className="text-xs font-black uppercase text-slate-500">Defaut</label>
                       <input name="defaut" value={formData.defaut} onChange={handleInputChange}
                         className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-orange-500 outline-none" />
                     </div>
@@ -266,14 +265,9 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
                         className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-orange-500 outline-none" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase text-slate-500">Rate (%)</label>
+                      <label className="text-xs font-black uppercase text-slate-500">Taux (%)</label>
                       <input name="taux" value={formData.taux} onChange={handleInputChange}
                         className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-orange-500 outline-none" />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <label className="text-xs font-black uppercase text-slate-500">Remarks</label>
-                      <textarea name="remarque" value={formData.remarque} onChange={handleInputChange} rows={4}
-                        className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-orange-500 outline-none resize-none" />
                     </div>
                   </div>
                 )}
@@ -282,7 +276,7 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
                 {activeTab === 2 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase text-slate-500">Main image (SET)</label>
+                      <label className="text-xs font-black uppercase text-slate-500">Image (SET)</label>
                       <input type="file" ref={setFileInputRef} className="hidden" accept="image/*" onChange={e => handleImageUpload(e)} />
                       <div onClick={() => setFileInputRef.current?.click()}
                         className="h-48 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center bg-slate-50 relative overflow-hidden group cursor-pointer hover:border-orange-400 hover:bg-orange-50/30 transition-all">

@@ -206,14 +206,13 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
       <header className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Rework</h1>
-          <p className="text-slate-500 font-medium">Complete and track reworks linked to reclamations</p>
         </div>
         {innerView === 'list' && (
           <div className="flex gap-3">
             {reworks.length > 0 && (
               <button onClick={handleExportAll}
                 className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all">
-                <FileDown size={18} /> Export All
+                <FileDown size={18} /> Export Excel
               </button>
             )}
             <button onClick={openNewForm}
@@ -260,7 +259,7 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-slate-900 text-white">
-                      {['VR REF', 'Date', 'Set No.', 'Part No', 'Description', 'Quantity', '% Defect', 'Decision', 'Approved', 'Actions'].map(h => (
+                      {['VR REF', 'Date', 'Set No.', 'Part No', 'Description', 'Quantity', '% Taux', 'Decision', 'Approved', 'Actions'].map(h => (
                         <th key={h} className="px-4 py-3 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -351,12 +350,12 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                 {activeTab === 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
-                      { label: 'VR REF', name: 'vrRef', placeholder: 'Ex: TN-VR-001' },
-                      { label: 'Week', name: 'week', placeholder: 'Ex: W12' },
+                      { label: 'VR REF', name: 'vrRef', placeholder: '' },
+                      { label: 'Week', name: 'week', placeholder: '' },
                       { label: 'Date', name: 'date', type: 'date' },
                       { label: 'MT/GR', name: 'mtGr' },
-                      { label: 'Set Number', name: 'setNumber', placeholder: 'Ex: SET-001' },
-                      { label: 'Part No', name: 'partNo', placeholder: 'Ex: REF-XYZ' },
+                      { label: 'Set Number', name: 'setNumber', placeholder: '' },
+                      { label: 'Part No', name: 'partNo', placeholder: '' },
                     ].map(f => (
                       <div key={f.name} className="space-y-2">
                         <label className="text-xs font-black uppercase text-slate-500">{f.label}</label>
@@ -388,7 +387,7 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
                       { label: 'Quantity', name: 'quantity' },
-                      { label: '% Defect', name: 'percent' },
+                      { label: '% Taux', name: 'percent' },
                       { label: 'Rework Form', name: 'reworkForm' },
                       { label: 'Returned Quantity', name: 'quantityReturned' },
                       { label: 'Status', name: 'status' },
@@ -442,8 +441,8 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                       { label: 'Quota', name: 'quota' },
                       { label: 'Order Number 2', name: 'orderNumber2' },
                       { label: 'Received Quantity', name: 'quantityReceived' },
-                      { label: 'Column 1', name: 'colonne1' },
-                      { label: 'Column 2', name: 'colonne2' },
+                      {/*{ label: 'Column 1', name: 'colonne1' },
+                      { label: 'Column 2', name: 'colonne2' },*/}
                     ].map(f => (
                       <div key={f.name} className="space-y-2">
                         <label className="text-xs font-black uppercase text-slate-500">{f.label}</label>
