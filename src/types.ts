@@ -87,8 +87,9 @@ export interface Reclamation {
 // ─── Rework ─────────────────────────────────────────────────────
 export interface ReworkEntry {
   id: number;
-  reclamationId?: number; // optional link back to a Reclamation
+  reclamationId?: number;
   vrRef: string;
+  week: string;        // new: week number
   date: string;
   prPu: string;
   mtGr: string;
@@ -102,6 +103,7 @@ export interface ReworkEntry {
   reworkForm: string;
   decision: string;
   quantityReturned: string;
+  status: string;      // new: status field
   weekTrailer: string;
   trailerNumber: string;
   deliveryNoteTN: string;

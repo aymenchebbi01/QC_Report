@@ -20,11 +20,11 @@ interface Props {
 
 const EMPTY_FORM: Omit<ReworkEntry, 'id'> = {
   reclamationId: undefined,
-  vrRef: '', date: '', prPu: '', mtGr: '',
+  vrRef: '', week: '', date: '', prPu: '', mtGr: '',
   setNumber: '', partNo: '', description: '',
   quantity: '', comments: '', percent: '',
   approved: '', reworkForm: '', decision: '',
-  quantityReturned: '', weekTrailer: '', trailerNumber: '',
+  quantityReturned: '', status: '', weekTrailer: '', trailerNumber: '',
   deliveryNoteTN: '', quota: '', orderNumber2: '',
   quantityReceived: '', colonne1: '', colonne2: '',
 };
@@ -137,33 +137,35 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
     }
   };
 
-  /** Export a single rework entry to Excel */
+  /** Export a single rework entry to Excel (column order per spec) */
   const handleExportExcel = (entry: ReworkEntry) => {
     const linkedRec = reclamations.find(r => r.id === entry.reclamationId);
     const rows = [
       ['Field', 'Value'],
-      ['VR REF', entry.vrRef],
-      ['Date', entry.date],
-      ['PR/PU', entry.prPu],
-      ['MT/GR', entry.mtGr],
-      ['Set Number', entry.setNumber],
-      ['Part No', entry.partNo],
-      ['Description', entry.description],
-      ['Quantity', entry.quantity],
-      ['% Defect', entry.percent],
-      ['Approved', entry.approved],
-      ['Rework Form', entry.reworkForm],
-      ['Decision', entry.decision],
-      ['Returned Qty', entry.quantityReturned],
-      ['WEEK Trailer', entry.weekTrailer],
-      ['Trailer Number', entry.trailerNumber],
-      ['Delivery Note TN', entry.deliveryNoteTN],
-      ['Quota', entry.quota],
-      ['Order Number 2', entry.orderNumber2],
-      ['Received Qty', entry.quantityReceived],
-      ['Column 1', entry.colonne1],
-      ['Column 2', entry.colonne2],
-      ['Comments', entry.comments],
+      ['VR REF',           entry.vrRef],
+      ['Week',             entry.week],
+      ['Date',             entry.date],
+      ['PR/PU',            entry.prPu],
+      ['MT/GR',            entry.mtGr],
+      ['Set Number',       entry.setNumber],
+      ['Part No',          entry.partNo],
+      ['Description',      entry.description],
+      ['Quantity',         entry.quantity],
+      ['Comments',         entry.comments],
+      ['Defect',           entry.percent],
+      ['Approved',         entry.approved],
+      ['Rework Form',      entry.reworkForm],
+      ['Decision',         entry.decision],
+      ['Quantity Returned',entry.quantityReturned],
+      ['Status',           entry.status],
+      ['Week Trailer',     entry.weekTrailer],
+      ['Trailer Number',   entry.trailerNumber],
+      ['Delivery Note',    entry.deliveryNoteTN],
+      ['Quota',            entry.quota],
+      ['Order Number',     entry.orderNumber2],
+      ['Quantity Received',entry.quantityReceived],
+      ['Column 1',         entry.colonne1],
+      ['Column 2',         entry.colonne2],
       ...(linkedRec ? [['Linked Reclamation', `${linkedRec.set} — ${linkedRec.reference}`]] : []),
     ];
     const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -173,17 +175,25 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
     XLSX.writeFile(wb, `Rework_${entry.vrRef || entry.setNumber}.xlsx`);
   };
 
-  /** Export ALL reworks to a single Excel file */
+  /** Export ALL reworks to a single Excel file (column order per spec) */
   const handleExportAll = () => {
-    const headers = ['VR REF', 'Date', 'PR/PU', 'MT/GR', 'Set Number', 'Part No', 'Description', 'Quantity', '% Defect', 'Approved', 'Rework Form', 'Decision', 'Returned Qty', 'WEEK Trailer', 'Trailer Number', 'Delivery Note TN', 'Quota', 'Order Number 2', 'Received Qty', 'Column 1', 'Column 2', 'Comments', 'Linked Reclamation'];
+    const headers = [
+      'VR REF', 'Week', 'Date', 'PR/PU', 'MT/GR', 'Set Number', 'Part No',
+      'Description', 'Quantity', 'Comments', 'Defect', 'Approved', 'Rework Form',
+      'Decision', 'Quantity Returned', 'Status', 'Week Trailer', 'Trailer Number',
+      'Delivery Note', 'Quota', 'Order Number', 'Quantity Received',
+      'Column 1', 'Column 2', 'Linked Reclamation',
+    ];
     const dataRows = reworks.map(entry => {
       const linkedRec = reclamations.find(r => r.id === entry.reclamationId);
       return [
-        entry.vrRef, entry.date, entry.prPu, entry.mtGr, entry.setNumber, entry.partNo,
-        entry.description, entry.quantity, entry.percent, entry.approved, entry.reworkForm,
-        entry.decision, entry.quantityReturned, entry.weekTrailer, entry.trailerNumber,
-        entry.deliveryNoteTN, entry.quota, entry.orderNumber2, entry.quantityReceived,
-        entry.colonne1, entry.colonne2, entry.comments,
+        entry.vrRef, entry.week, entry.date, entry.prPu, entry.mtGr,
+        entry.setNumber, entry.partNo, entry.description, entry.quantity,
+        entry.comments, entry.percent, entry.approved, entry.reworkForm,
+        entry.decision, entry.quantityReturned, entry.status,
+        entry.weekTrailer, entry.trailerNumber, entry.deliveryNoteTN,
+        entry.quota, entry.orderNumber2, entry.quantityReceived,
+        entry.colonne1, entry.colonne2,
         linkedRec ? `${linkedRec.set} — ${linkedRec.reference}` : '',
       ];
     });
@@ -353,6 +363,7 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
                       { label: 'VR REF', name: 'vrRef', placeholder: 'Ex: TN-VR-001' },
+                      { label: 'Week', name: 'week', placeholder: 'Ex: W12' },
                       { label: 'Date', name: 'date', type: 'date' },
                       { label: 'MT/GR', name: 'mtGr' },
                       { label: 'Set Number', name: 'setNumber', placeholder: 'Ex: SET-001' },
@@ -391,6 +402,7 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                       { label: '% Defect', name: 'percent' },
                       { label: 'Rework Form', name: 'reworkForm' },
                       { label: 'Returned Quantity', name: 'quantityReturned' },
+                      { label: 'Status', name: 'status' },
                     ].map(f => (
                       <div key={f.name} className="space-y-2">
                         <label className="text-xs font-black uppercase text-slate-500">{f.label}</label>
