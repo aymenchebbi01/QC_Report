@@ -140,36 +140,25 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
   /** Export a single rework entry to Excel (column order per spec) */
   const handleExportExcel = (entry: ReworkEntry) => {
     const linkedRec = reclamations.find(r => r.id === entry.reclamationId);
-    const rows = [
-      ['Field', 'Value'],
-      ['VR REF',           entry.vrRef],
-      ['Week',             entry.week],
-      ['Date',             entry.date],
-      ['PR/PU',            entry.prPu],
-      ['MT/GR',            entry.mtGr],
-      ['Set Number',       entry.setNumber],
-      ['Part No',          entry.partNo],
-      ['Description',      entry.description],
-      ['Quantity',         entry.quantity],
-      ['Comments',         entry.comments],
-      ['Defect',           entry.percent],
-      ['Approved',         entry.approved],
-      ['Rework Form',      entry.reworkForm],
-      ['Decision',         entry.decision],
-      ['Quantity Returned',entry.quantityReturned],
-      ['Status',           entry.status],
-      ['Week Trailer',     entry.weekTrailer],
-      ['Trailer Number',   entry.trailerNumber],
-      ['Delivery Note',    entry.deliveryNoteTN],
-      ['Quota',            entry.quota],
-      ['Order Number',     entry.orderNumber2],
-      ['Quantity Received',entry.quantityReceived],
-      ['Column 1',         entry.colonne1],
-      ['Column 2',         entry.colonne2],
-      ...(linkedRec ? [['Linked Reclamation', `${linkedRec.set} — ${linkedRec.reference}`]] : []),
+    const headers = [
+      'VR REF', 'Week', 'Date', 'PR/PU', 'MT/GR', 'Set Number', 'Part No',
+      'Description', 'Quantity', 'Comments', 'Defect', 'Approved', 'Rework Form',
+      'Decision', 'Quantity Returned', 'Status', 'Week Trailer', 'Trailer Number',
+      'Delivery Note', 'Quota', 'Order Number', 'Quantity Received',
+      'Column 1', 'Column 2', 'Linked Reclamation',
     ];
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [{ wch: 24 }, { wch: 40 }];
+    const row = [
+      entry.vrRef, entry.week, entry.date, entry.prPu, entry.mtGr,
+      entry.setNumber, entry.partNo, entry.description, entry.quantity,
+      entry.comments, entry.percent, entry.approved, entry.reworkForm,
+      entry.decision, entry.quantityReturned, entry.status,
+      entry.weekTrailer, entry.trailerNumber, entry.deliveryNoteTN,
+      entry.quota, entry.orderNumber2, entry.quantityReceived,
+      entry.colonne1, entry.colonne2,
+      linkedRec ? `${linkedRec.set} — ${linkedRec.reference}` : '',
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([headers, row]);
+    ws['!cols'] = headers.map(() => ({ wch: 20 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Rework');
     XLSX.writeFile(wb, `Rework_${entry.vrRef || entry.setNumber}.xlsx`);
