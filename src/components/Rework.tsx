@@ -287,9 +287,6 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                           <td className="px-4 py-3">{entry.approved}</td>
                           <td className="px-4 py-3">
                             <div className="flex gap-2 items-center">
-                              <button onClick={e => { e.stopPropagation(); handleExportExcel(entry); }}
-                                title="Export Excel"
-                                className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"><FileDown size={14} /></button>
                               <button onClick={e => deleteEntry(e, entry.id)}
                                 className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"><Trash2 size={14} /></button>
                               <Edit size={14} className="text-slate-300" />
