@@ -5,11 +5,10 @@
  * Decision = free text with suggestion datalist.
  */
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, X, Save, FileDown, Link, ArrowLeft, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, FileDown, Link, ArrowLeft, Search, Sheet } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Reclamation, ReworkEntry } from '../types';
-import { generatePDF } from '../utils/pdfGenerator';
-import logo from '../assets/logo.png';
+import * as XLSX from 'xlsx';
 import { cn } from '../utils/cn';
 
 interface Props {
@@ -48,10 +47,23 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
   const [isGenerating, setIsGenerating] = useState(false);
   const [search, setSearch] = useState('');
 
+  /** Generate the next VR REF in sequence: TN-VR-001, TN-VR-002, … */
+  const nextVrRef = (): string => {
+    if (reworks.length === 0) return 'TN-VR-001';
+    const nums = reworks
+      .map(r => {
+        const m = r.vrRef.match(/TN-VR-(\d+)/);
+        return m ? parseInt(m[1], 10) : 0;
+      })
+      .filter(n => n > 0);
+    const max = nums.length > 0 ? Math.max(...nums) : 0;
+    return `TN-VR-${String(max + 1).padStart(3, '0')}`;
+  };
+
   const openReclamations = reclamations.filter(r => !r.reworkId);
 
   const openNewForm = () => {
-    setFormData(EMPTY_FORM);
+    setFormData({ ...EMPTY_FORM, vrRef: nextVrRef() });
     setEditingId(null);
     setActiveTab(0);
     setInnerView('form');
@@ -61,12 +73,13 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
   const openFromReclamation = (rec: Reclamation) => {
     setFormData({
       ...EMPTY_FORM,
+      vrRef: nextVrRef(),
       reclamationId: rec.id,
-      vrRef: rec.reference,
       setNumber: rec.set,
       partNo: rec.reference,
       description: rec.description,
       quantity: rec.quantite,
+      percent: rec.taux,   // pre-fill defect % from reclamation rate
     });
     setEditingId(null);
     setActiveTab(0);
@@ -124,14 +137,61 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
     }
   };
 
-  const handleExportPDF = async (entry: ReworkEntry) => {
-    setIsGenerating(true);
-    await new Promise(r => setTimeout(r, 200));
-    try {
-      await generatePDF(`rework-print-${entry.id}`, `Rework_${entry.vrRef || entry.setNumber}`);
-    } finally {
-      setIsGenerating(false);
-    }
+  /** Export a single rework entry to Excel */
+  const handleExportExcel = (entry: ReworkEntry) => {
+    const linkedRec = reclamations.find(r => r.id === entry.reclamationId);
+    const rows = [
+      ['Field', 'Value'],
+      ['VR REF', entry.vrRef],
+      ['Date', entry.date],
+      ['PR/PU', entry.prPu],
+      ['MT/GR', entry.mtGr],
+      ['Set Number', entry.setNumber],
+      ['Part No', entry.partNo],
+      ['Description', entry.description],
+      ['Quantity', entry.quantity],
+      ['% Defect', entry.percent],
+      ['Approved', entry.approved],
+      ['Rework Form', entry.reworkForm],
+      ['Decision', entry.decision],
+      ['Returned Qty', entry.quantityReturned],
+      ['WEEK Trailer', entry.weekTrailer],
+      ['Trailer Number', entry.trailerNumber],
+      ['Delivery Note TN', entry.deliveryNoteTN],
+      ['Quota', entry.quota],
+      ['Order Number 2', entry.orderNumber2],
+      ['Received Qty', entry.quantityReceived],
+      ['Column 1', entry.colonne1],
+      ['Column 2', entry.colonne2],
+      ['Comments', entry.comments],
+      ...(linkedRec ? [['Linked Reclamation', `${linkedRec.set} — ${linkedRec.reference}`]] : []),
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 24 }, { wch: 40 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Rework');
+    XLSX.writeFile(wb, `Rework_${entry.vrRef || entry.setNumber}.xlsx`);
+  };
+
+  /** Export ALL reworks to a single Excel file */
+  const handleExportAll = () => {
+    const headers = ['VR REF', 'Date', 'PR/PU', 'MT/GR', 'Set Number', 'Part No', 'Description', 'Quantity', '% Defect', 'Approved', 'Rework Form', 'Decision', 'Returned Qty', 'WEEK Trailer', 'Trailer Number', 'Delivery Note TN', 'Quota', 'Order Number 2', 'Received Qty', 'Column 1', 'Column 2', 'Comments', 'Linked Reclamation'];
+    const dataRows = reworks.map(entry => {
+      const linkedRec = reclamations.find(r => r.id === entry.reclamationId);
+      return [
+        entry.vrRef, entry.date, entry.prPu, entry.mtGr, entry.setNumber, entry.partNo,
+        entry.description, entry.quantity, entry.percent, entry.approved, entry.reworkForm,
+        entry.decision, entry.quantityReturned, entry.weekTrailer, entry.trailerNumber,
+        entry.deliveryNoteTN, entry.quota, entry.orderNumber2, entry.quantityReceived,
+        entry.colonne1, entry.colonne2, entry.comments,
+        linkedRec ? `${linkedRec.set} — ${linkedRec.reference}` : '',
+      ];
+    });
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...dataRows]);
+    ws['!cols'] = headers.map(() => ({ wch: 20 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'All Reworks');
+    XLSX.writeFile(wb, `All_Reworks_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const filtered = reworks.filter(r =>
@@ -150,10 +210,18 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
           <p className="text-slate-500 font-medium">Complete and track reworks linked to reclamations</p>
         </div>
         {innerView === 'list' && (
-          <button onClick={openNewForm}
-            className="flex items-center gap-2 px-6 py-2.5 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 shadow-lg shadow-blue-500/20 transition-all">
-            <Plus size={18} /> New Rework
-          </button>
+          <div className="flex gap-3">
+            {reworks.length > 0 && (
+              <button onClick={handleExportAll}
+                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all">
+                <FileDown size={18} /> Export All
+              </button>
+            )}
+            <button onClick={openNewForm}
+              className="flex items-center gap-2 px-6 py-2.5 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 shadow-lg shadow-blue-500/20 transition-all">
+              <Plus size={18} /> New Rework
+            </button>
+          </div>
         )}
       </header>
 
@@ -220,10 +288,10 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                           </td>
                           <td className="px-4 py-3">{entry.approved}</td>
                           <td className="px-4 py-3">
-                            <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={e => { e.stopPropagation(); handleExportPDF(entry); }}
-                                title="Exporter PDF" disabled={isGenerating}
-                                className="p-1 text-blue-500 hover:bg-blue-50 rounded transition-colors"><FileDown size={14} /></button>
+                            <div className="flex gap-2 items-center">
+                              <button onClick={e => { e.stopPropagation(); handleExportExcel(entry); }}
+                                title="Export Excel"
+                                className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"><FileDown size={14} /></button>
                               <button onClick={e => deleteEntry(e, entry.id)}
                                 className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"><Trash2 size={14} /></button>
                               <Edit size={14} className="text-slate-300" />
@@ -284,9 +352,8 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                 {activeTab === 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
-                      { label: 'VR REF', name: 'vrRef', placeholder: 'Ex: VR-001' },
+                      { label: 'VR REF', name: 'vrRef', placeholder: 'Ex: TN-VR-001' },
                       { label: 'Date', name: 'date', type: 'date' },
-                      { label: 'PR/PU', name: 'prPu' },
                       { label: 'MT/GR', name: 'mtGr' },
                       { label: 'Set Number', name: 'setNumber', placeholder: 'Ex: SET-001' },
                       { label: 'Part No', name: 'partNo', placeholder: 'Ex: REF-XYZ' },
@@ -298,6 +365,16 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                           className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none" />
                       </div>
                     ))}
+                    {/* PR/PU dropdown */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase text-slate-500">PR/PU</label>
+                      <select name="prPu" value={formData.prPu} onChange={handleInput}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                        <option value="">— Select —</option>
+                        <option value="Purchased Item">Purchased Item</option>
+                        <option value="Production Item">Production Item</option>
+                      </select>
+                    </div>
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-xs font-black uppercase text-slate-500">Description</label>
                       <input name="description" value={formData.description} onChange={handleInput}
@@ -399,59 +476,6 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Hidden PDF views */}
-      <div className="fixed -left-[9999px] top-0 w-[794px]">
-        {reworks.map(entry => {
-          const linkedRec = reclamations.find(r => r.id === entry.reclamationId);
-          return (
-            <div key={entry.id} id={`rework-print-${entry.id}`} className="bg-white font-sans">
-              <div style={{ display: 'flex', alignItems: 'center', borderBottom: '3px solid #3b82f6', padding: '24px 32px', gap: 16 }}>
-                <img src={logo} alt="Logo" style={{ height: 48, width: 'auto' }} />
-                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <div style={{ fontSize: 22, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, color: '#0f172a' }}>Rework</div>
-                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>Date : {entry.date || new Date(entry.id).toLocaleDateString('fr-FR')}</div>
-                </div>
-              </div>
-              {linkedRec && (
-                <div style={{ background: '#eff6ff', borderLeft: '4px solid #3b82f6', margin: '16px 32px 0', padding: '12px 16px', borderRadius: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#3b82f6', letterSpacing: 1 }}>Linked Reclamation</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#1e3a5f', marginTop: 4 }}>{linkedRec.set} — {linkedRec.reference}</div>
-                </div>
-              )}
-              <div style={{ padding: '24px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                {[
-                  { label: 'VR REF', value: entry.vrRef }, { label: 'PR/PU', value: entry.prPu },
-                  { label: 'MT/GR', value: entry.mtGr }, { label: 'Set Number', value: entry.setNumber },
-                  { label: 'Part No', value: entry.partNo }, { label: 'Description', value: entry.description },
-                  { label: 'Quantity', value: entry.quantity }, { label: '% Defect', value: entry.percent },
-                  { label: 'Approved', value: entry.approved }, { label: 'Rework Form', value: entry.reworkForm },
-                  { label: 'Decision', value: entry.decision }, { label: 'Returned Qty', value: entry.quantityReturned },
-                  { label: 'WEEK Trailer', value: entry.weekTrailer }, { label: 'Trailer Number', value: entry.trailerNumber },
-                  { label: 'Delivery Note TN', value: entry.deliveryNoteTN }, { label: 'Quota', value: entry.quota },
-                  { label: 'Order Number 2', value: entry.orderNumber2 }, { label: 'Received Qty', value: entry.quantityReceived },
-                  { label: 'Colonne 1', value: entry.colonne1 }, { label: 'Colonne 2', value: entry.colonne2 },
-                ].map(({ label, value }) => (
-                  <div key={label} style={{ borderLeft: '3px solid #3b82f6', paddingLeft: 12 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: 1 }}>{label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', marginTop: 3 }}>{value || '—'}</div>
-                  </div>
-                ))}
-                {entry.comments && (
-                  <div style={{ gridColumn: '1 / -1', borderLeft: '3px solid #3b82f6', paddingLeft: 12 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: 1 }}>Comments</div>
-                    <div style={{ fontSize: 13, color: '#0f172a', marginTop: 3 }}>{entry.comments}</div>
-                  </div>
-                )}
-              </div>
-              <div style={{ borderTop: '1px solid #e2e8f0', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8' }}>
-                <span>QC Report — Rework</span>
-                <span>{entry.vrRef} / {entry.setNumber}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
