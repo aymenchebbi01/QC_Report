@@ -174,7 +174,7 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-slate-900 text-white">
-                      {['SET', 'Reference', 'Description', 'Defect', 'Quantity', 'Taux %', 'Status', 'Actions'].map(h => (
+                      {['SET', 'Reference', 'Description', 'Défaut', 'Quantity', 'Taux %', 'Status', 'Actions'].map(h => (
                         <th key={h} className="px-4 py-3 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
