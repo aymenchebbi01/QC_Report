@@ -116,7 +116,7 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
       if (editingId !== null) {
         const updated = await api.updateRework(editingId, formData);
         setReworks(prev => prev.map(r => r.id === editingId ? updated : r));
-        
+
         const oldEntry = reworks.find(r => r.id === editingId);
         if (oldEntry?.reclamationId !== formData.reclamationId) {
           if (oldEntry?.reclamationId) {
@@ -131,7 +131,7 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
       } else {
         const created = await api.createRework(formData);
         setReworks(prev => [created, ...prev]);
-        
+
         if (formData.reclamationId) {
           await api.updateReclamation(formData.reclamationId, { reworkId: created.id });
           setReclamations(prev => prev.map(r => r.id === formData.reclamationId ? { ...r, reworkId: created.id } : r));
@@ -462,9 +462,7 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                       { label: 'Delivery Note TN', name: 'deliveryNoteTN' },
                       { label: 'Quota', name: 'quota' },
                       { label: 'Order Number 2', name: 'orderNumber2' },
-                      { label: 'Received Quantity', name: 'quantityReceived' },
-                      {/*{ label: 'Column 1', name: 'colonne1' },
-                      { label: 'Column 2', name: 'colonne2' },*/}
+                      { label: 'Received Quantity', name: 'quantityReceived' }
                     ].map(f => (
                       <div key={f.name} className="space-y-2">
                         <label className="text-xs font-black uppercase text-slate-500">{f.label}</label>
