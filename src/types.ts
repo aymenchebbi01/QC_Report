@@ -110,6 +110,4 @@ export interface ReworkEntry {
   quota: string;
   orderNumber2: string;
   quantityReceived: string;
-  colonne1: string;
-  colonne2: string;
 }

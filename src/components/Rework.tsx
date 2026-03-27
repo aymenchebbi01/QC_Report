@@ -27,7 +27,7 @@ const EMPTY_FORM: Omit<ReworkEntry, 'id'> = {
   approved: '', reworkForm: '', decision: '',
   quantityReturned: '', status: '', weekTrailer: '', trailerNumber: '',
   deliveryNoteTN: '', quota: '', orderNumber2: '',
-  quantityReceived: '', colonne1: '', colonne2: '',
+  quantityReceived: '',
 };
 
 const TABS = ['Identification', 'Inspection & Decision', 'Logistics'];
@@ -179,7 +179,6 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
       entry.decision, entry.quantityReturned, entry.status,
       entry.weekTrailer, entry.trailerNumber, entry.deliveryNoteTN,
       entry.quota, entry.orderNumber2, entry.quantityReceived,
-      entry.colonne1, entry.colonne2,
       linkedRec ? `${linkedRec.set} — ${linkedRec.reference}` : '',
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, row]);
@@ -207,7 +206,6 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
         entry.decision, entry.quantityReturned, entry.status,
         entry.weekTrailer, entry.trailerNumber, entry.deliveryNoteTN,
         entry.quota, entry.orderNumber2, entry.quantityReceived,
-        entry.colonne1, entry.colonne2,
         linkedRec ? `${linkedRec.set} — ${linkedRec.reference}` : '',
       ];
     });
