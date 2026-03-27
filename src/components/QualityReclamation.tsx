@@ -360,6 +360,14 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
                 Aucune image (SET)
               </div>
             )}
+
+            {rec.galleryImages && rec.galleryImages.filter(Boolean).length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rec.galleryImages.filter(Boolean).length}, 1fr)`, gap: '4px', backgroundColor: '#fff', padding: '4px 4px 0 4px' }}>
+                {rec.galleryImages.filter(Boolean).map((img, i) => (
+                  <img key={i} src={img!} alt="" style={{ width: '100%', height: '140px', objectFit: 'cover', display: 'block', borderRadius: '8px' }} />
+                ))}
+              </div>
+            )}
             
             <div style={{ padding: '30px', fontSize: '20px', lineHeight: '1.6' }}>
               <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Set :</span> <span style={{ fontWeight: '500' }}>{rec.set}</span></div>
