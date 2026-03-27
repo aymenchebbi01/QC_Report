@@ -174,7 +174,7 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-slate-900 text-white">
-                      {['SET', 'Reference', 'Description', 'Defect', 'Quantity', 'Rate', 'Status', 'Actions'].map(h => (
+                      {['SET', 'Reference', 'Description', 'Defect', 'Quantity', 'Taux %', 'Status', 'Actions'].map(h => (
                         <th key={h} className="px-4 py-3 text-[10px] font-black uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -368,15 +368,15 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
                 ))}
               </div>
             )}
-            
+
             <div style={{ padding: '30px', fontSize: '20px', lineHeight: '1.6' }}>
               <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Set :</span> <span style={{ fontWeight: '500' }}>{rec.set}</span></div>
               <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Référence :</span> <span style={{ color: '#059669', fontWeight: 'bold' }}>{rec.reference}</span></div>
               <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Description :</span> <span style={{ fontWeight: '500' }}>{rec.description}</span></div>
               <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Défaut :</span> <span style={{ fontWeight: '500' }}>{rec.defaut}</span></div>
               <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Quantité total :</span> <span style={{ fontWeight: '500' }}>{rec.quantite}</span></div>
-              <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Taux :</span> <span style={{ fontWeight: '500' }}>{rec.taux}</span></div>
-              
+              <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Taux % :</span> <span style={{ fontWeight: '500' }}>{rec.taux}</span></div>
+
               {rec.remarque && (
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', fontSize: '16px', color: '#64748b' }}>
                   <span style={{ fontWeight: 'bold', color: '#334155' }}>Remarque :</span> {rec.remarque}
