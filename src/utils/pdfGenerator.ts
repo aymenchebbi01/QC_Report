@@ -109,3 +109,33 @@ export async function generatePDF(elementId: string, filename: string) {
     alert(`Failed to generate PDF: ${error.message || 'Unknown error'}. Check console for details.`);
   }
 }
+
+export async function generatePNG(elementId: string, filename: string) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+
+  try {
+    const images = element.getElementsByTagName('img');
+    const imagePromises = Array.from(images).map(img => {
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+    });
+    await Promise.all(imagePromises);
+
+    const canvas = await html2canvas(element, {
+      scale: 3,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+    });
+
+    const link = document.createElement('a');
+    link.download = `${filename}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (error) {
+    console.error('Failed to generate PNG:', error);
+  }
+}

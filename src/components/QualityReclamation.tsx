@@ -5,7 +5,7 @@ import React, { useState, useRef } from 'react';
 import { Plus, Edit, Trash2, X, Upload, Save, FileDown, Search, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Reclamation } from '../types';
-import { generatePDF } from '../utils/pdfGenerator';
+import { generatePNG } from '../utils/pdfGenerator';
 import logo from '../assets/logo.png';
 import { cn } from '../utils/cn';
 import { api } from '../services/api';
@@ -121,11 +121,11 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
     }
   };
 
-  const handleExportPDF = async (rec: Reclamation) => {
+  const handleExportPNG = async (rec: Reclamation) => {
     setIsGenerating(true);
     await new Promise(r => setTimeout(r, 200));
     try {
-      await generatePDF(`reclamation-print-${rec.id}`, `Reclamation_${rec.set}_${rec.reference}`);
+      await generatePNG(`reclamation-print-${rec.id}`, `Reclamation_${rec.set}_${rec.reference}`);
     } finally {
       setIsGenerating(false);
     }
@@ -201,8 +201,8 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex gap-2 items-center">
-                              <button onClick={e => { e.stopPropagation(); handleExportPDF(rec); }}
-                                title="Exporter PDF" disabled={isGenerating}
+                              <button onClick={e => { e.stopPropagation(); handleExportPNG(rec); }}
+                                title="Exporter Image" disabled={isGenerating}
                                 className="p-1 text-orange-500 hover:bg-orange-50 rounded transition-colors"><FileDown size={14} /></button>
                               <button onClick={e => deleteEntry(e, rec.id)}
                                 className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"><Trash2 size={14} /></button>
@@ -349,47 +349,31 @@ export function QualityReclamation({ reclamations, setReclamations }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Hidden PDF views */}
-      <div className="fixed -left-[9999px] top-0 w-[794px]">
+      {/* Hidden PNG views */}
+      <div className="fixed -left-[9999px] top-0">
         {reclamations.map(rec => (
-          <div key={rec.id} id={`reclamation-print-${rec.id}`} className="bg-white font-sans">
-            <div style={{ display: 'flex', alignItems: 'center', borderBottom: '3px solid #f97316', padding: '24px 32px', gap: 16 }}>
-              <img src={logo} alt="Logo" style={{ height: 48, width: 'auto' }} />
-              <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                <div style={{ fontSize: 22, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, color: '#0f172a' }}>Réclamation Qualité</div>
-                <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>Date : {new Date(rec.id).toLocaleDateString('fr-FR')}</div>
+          <div key={rec.id} id={`reclamation-print-${rec.id}`} className="bg-white font-sans text-slate-900 rounded-3xl overflow-hidden shadow-2xl" style={{ width: '460px' }}>
+            {rec.setImage ? (
+              <img src={rec.setImage} alt="" style={{ width: '100%', height: 'auto', maxHeight: '460px', objectFit: 'cover', display: 'block' }} />
+            ) : (
+              <div style={{ padding: '60px 20px', textAlign: 'center', background: '#f8fafc', color: '#94a3b8', fontSize: '18px', fontWeight: 'bold' }}>
+                Aucune image (SET)
               </div>
-            </div>
-            <div style={{ padding: '32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-              {[{ label: 'SET', value: rec.set }, { label: 'Référence', value: rec.reference }, { label: 'Description', value: rec.description }, { label: 'Défaut', value: rec.defaut }, { label: 'Quantité', value: rec.quantite }, { label: 'Taux (%)', value: rec.taux }].map(({ label, value }) => (
-                <div key={label} style={{ borderLeft: '3px solid #f97316', paddingLeft: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: 1 }}>{label}</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginTop: 4 }}>{value || '—'}</div>
-                </div>
-              ))}
+            )}
+            
+            <div style={{ padding: '30px', fontSize: '20px', lineHeight: '1.6' }}>
+              <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Set :</span> <span style={{ fontWeight: '500' }}>{rec.set}</span></div>
+              <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Référence :</span> <span style={{ color: '#059669', fontWeight: 'bold' }}>{rec.reference}</span></div>
+              <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Description :</span> <span style={{ fontWeight: '500' }}>{rec.description}</span></div>
+              <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Défaut :</span> <span style={{ fontWeight: '500' }}>{rec.defaut}</span></div>
+              <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Quantité total :</span> <span style={{ fontWeight: '500' }}>{rec.quantite}</span></div>
+              <div style={{ marginBottom: '8px' }}><span style={{ color: '#475569', display: 'inline-block', width: '160px' }}>Taux :</span> <span style={{ fontWeight: '500' }}>{rec.taux}</span></div>
+              
               {rec.remarque && (
-                <div style={{ gridColumn: '1 / -1', borderLeft: '3px solid #f97316', paddingLeft: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: 1 }}>Remarque</div>
-                  <div style={{ fontSize: 14, color: '#0f172a', marginTop: 4 }}>{rec.remarque}</div>
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', fontSize: '16px', color: '#64748b' }}>
+                  <span style={{ fontWeight: 'bold', color: '#334155' }}>Remarque :</span> {rec.remarque}
                 </div>
               )}
-              {[rec.setImage, ...rec.galleryImages].filter(Boolean).length > 0 && (
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#94a3b8', letterSpacing: 1, marginBottom: 16, borderLeft: '3px solid #f97316', paddingLeft: 12 }}>Photos</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                    {[rec.setImage, ...rec.galleryImages].filter(Boolean).map((img, i) => (
-                      <div key={i} style={{ width: '100%' }}>
-                        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: '#cbd5e1', letterSpacing: 1, marginBottom: 6 }}>Photo {i + 1}</div>
-                        <img src={img!} alt="" style={{ width: '100%', height: 'auto', maxHeight: 480, objectFit: 'contain', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block' }} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div style={{ borderTop: '1px solid #e2e8f0', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8' }}>
-              <span>QC Report — Réclamation Qualité</span>
-              <span>{rec.set} / {rec.reference}</span>
             </div>
           </div>
         ))}
