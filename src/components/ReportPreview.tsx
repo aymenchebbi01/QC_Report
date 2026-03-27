@@ -250,11 +250,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
         {data.images.length > 0 && (
           <section style={{ marginBottom: '15px' }}>
             <h2 style={{ backgroundColor: '#0f172a', color: '#ffffff', padding: '8px 15px', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '20px' }}>Inspection Photographs</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '30px' }}>
               {data.images.map((img) => (
-                <div key={img.id} style={{ border: '1px solid #f1f5f9', padding: '12px', borderRadius: '12px', textAlign: 'center', backgroundColor: '#fcfcfc', pageBreakInside: 'avoid' }}>
-                  <img src={img.url} alt="Evidence" style={{ width: '100%', height: '240px', objectFit: 'cover', borderRadius: '8px', marginBottom: '12px', display: 'block' }} />
-                  {img.caption && <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>{img.caption}</div>}
+                <div key={img.id} style={{ border: '1px solid #f1f5f9', padding: '16px', borderRadius: '12px', textAlign: 'center', backgroundColor: '#fcfcfc', pageBreakInside: 'avoid' }}>
+                  <img src={img.url} alt="Evidence" style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: '8px', marginBottom: '12px', display: 'block' }} />
+                  {img.caption && <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>{img.caption}</div>}
                 </div>
               ))}
             </div>

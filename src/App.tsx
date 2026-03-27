@@ -129,6 +129,20 @@ export default function App() {
     setView('form');
   };
 
+  const handleGenerateReportFromRework = (rework: ReworkEntry) => {
+    setFormData({
+      ...INITIAL_DATA,
+      reportNumber: `REP-${rework.vrRef || Date.now()}`,
+      testDate: new Date().toISOString().split('T')[0],
+      articleNumber: rework.partNo,
+      articleDescription: rework.description,
+      batchQuantity: parseInt(rework.quantity) || 0,
+      supplier: rework.prPu,
+    });
+    setEditingId(null);
+    setView('form');
+  };
+
   const handleDelete = async (id: number) => {
     if (confirm("Delete this report?")) {
       await api.deleteReport(id);
@@ -930,6 +944,7 @@ export default function App() {
                 setReclamations={setReclamations}
                 reworks={reworks}
                 setReworks={setReworks}
+                onGenerateReport={handleGenerateReportFromRework}
               />
             </motion.div>
           )}

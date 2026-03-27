@@ -5,7 +5,7 @@
  * Decision = free text with suggestion datalist.
  */
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, X, Save, FileDown, Link, ArrowLeft, Search, Sheet } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, FileDown, Link, ArrowLeft, Search, Sheet, FilePlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Reclamation, ReworkEntry } from '../types';
 import * as XLSX from 'xlsx';
@@ -17,6 +17,7 @@ interface Props {
   setReclamations: React.Dispatch<React.SetStateAction<Reclamation[]>>;
   reworks: ReworkEntry[];
   setReworks: React.Dispatch<React.SetStateAction<ReworkEntry[]>>;
+  onGenerateReport?: (entry: ReworkEntry) => void;
 }
 
 const EMPTY_FORM: Omit<ReworkEntry, 'id'> = {
@@ -40,7 +41,7 @@ const DECISION_BADGE: Record<string, string> = {
   'Retour fournisseur': 'bg-amber-100 text-amber-700',
 };
 
-export function Rework({ reclamations, setReclamations, reworks, setReworks }: Props) {
+export function Rework({ reclamations, setReclamations, reworks, setReworks, onGenerateReport }: Props) {
   const [innerView, setInnerView] = useState<'list' | 'form'>('list');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Omit<ReworkEntry, 'id'>>(EMPTY_FORM);
@@ -310,7 +311,13 @@ export function Rework({ reclamations, setReclamations, reworks, setReworks }: P
                           <td className="px-4 py-3">{entry.approved}</td>
                           <td className="px-4 py-3">
                             <div className="flex gap-2 items-center">
+                              {onGenerateReport && (
+                                <button onClick={e => { e.stopPropagation(); onGenerateReport(entry); }}
+                                  title="Generate Quality Report"
+                                  className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"><FilePlus size={14} /></button>
+                              )}
                               <button onClick={e => deleteEntry(e, entry.id)}
+                                title="Delete rework"
                                 className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"><Trash2 size={14} /></button>
                               <Edit size={14} className="text-slate-300" />
                             </div>
